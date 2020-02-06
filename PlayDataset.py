@@ -50,14 +50,15 @@ class PlayDataset(object):
         for code in os.listdir(self.sample_root):
             Dataset[code] = []
             code_path = os.path.join(self.sample_root, code)
-            for file in os.listdir(code_path):
-                file_name = os.path.splitext(file)[0]
-                image_path = os.path.join(code_path, file_name + self.img_format)
-                xml_path = os.path.join(code_path, file_name + '.xml')
-                if file_name not in Dataset[code] and \
-                        os.path.isfile(xml_path) and os.path.isfile(image_path):
-                    Dataset[code].append(file_name)
-                    cnt += 1
+            for root, _, file_lst in os.walk(code_path):
+                for file in file_lst:
+                    file_name = os.path.splitext(file)[0]
+                    image_path = os.path.join(root, file_name + self.img_format)
+                    xml_path = os.path.join(root, file_name + '.xml')
+                    if file_name not in Dataset[code] and \
+                            os.path.isfile(xml_path) and os.path.isfile(image_path):
+                        Dataset[code].append(file_name)
+                        cnt += 1
         print('The quantity of all valid images is {}'.format(cnt))
         return Dataset
 
@@ -473,6 +474,6 @@ class PlayDataset(object):
 
 
 if __name__ == '__main__':
-    sample_root = r'D:\Working\Tianma\1x1B2\data\1x1B2'
+    sample_root = r'D:\Working\阿里天池项目\数据重庆\Data\CQCampain'
     playData = PlayDataset(sample_root)
     playData.correct_dataset()
