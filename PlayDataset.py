@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 import xml.etree.ElementTree as ET
-
+from openpyxl import Workbook
 
 def convert_img_format(sample_root, img_format=None, tar_format='.jpg'):
     if img_format is None:
@@ -61,6 +61,22 @@ class PlayDataset(object):
                         cnt += 1
         print('The quantity of all valid images is {}'.format(cnt))
         return Dataset
+
+    def count_category(self):
+        output_dir = '.\\output'
+        table_path = os.path.join(output_dir, self.name+'_category_quantity.xlsx')
+        wb = Workbook()
+        sheet = wb.active
+        sheet.title = 'Category Quantity'
+        for category, name_lst in self.dataset.items():
+            quantity = len(name_lst)
+            print('Quantity of category [{}]: {}'.format(category, quantity))
+            row = category.split('\\') + [quantity]
+            sheet.append(row)
+        wb.save(table_path)
+        wb.close()
+        print("[FINISH] The result has been saved at path: {}".format(table_path))
+
 
     def sample_data(self,
                     num_of_samples,
@@ -497,7 +513,6 @@ class PlayDataset(object):
             print('The number of reset category [{}]: {}'.format(category, cnt))
             total_resetting += cnt
         print('[FINISH] Total number of reset data: {}'.format(total_resetting))
-
 
 
 if __name__ == '__main__':
