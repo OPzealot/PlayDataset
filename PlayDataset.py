@@ -47,17 +47,17 @@ class PlayDataset(object):
     def file_to_dict(self):
         Dataset = {}
         cnt = 0
-        for code in os.listdir(self.sample_root):
-            Dataset[code] = []
-            code_path = os.path.join(self.sample_root, code)
-            for root, _, file_lst in os.walk(code_path):
+        for root, _, file_lst in os.walk(self.sample_root):
+            if len(file_lst) > 0:
+                category = root.split(self.sample_root + '\\')[-1]
+                Dataset[category] = []
                 for file in file_lst:
                     file_name = os.path.splitext(file)[0]
                     image_path = os.path.join(root, file_name + self.img_format)
                     xml_path = os.path.join(root, file_name + '.xml')
-                    if file_name not in Dataset[code] and \
+                    if file_name not in Dataset[category] and \
                             os.path.isfile(xml_path) and os.path.isfile(image_path):
-                        Dataset[code].append(file_name)
+                        Dataset[category].append(file_name)
                         cnt += 1
         print('The quantity of all valid images is {}'.format(cnt))
         return Dataset
@@ -70,22 +70,22 @@ class PlayDataset(object):
         :info: 对数据集进行随机采样，生成新的数据集
         :param dir_name: 采样文件夹的名称后缀
         :param num_of_samples:采样数量
-        :param sample_dict: 这里可以添加特殊code的采样数量，比如类似 A2WBD=800
+        :param sample_dict: 这里可以添加特殊category的采样数量，比如类似 A2WBD=800
         """
         new_path = self.sample_root + '_' + dir_name
         others_path = new_path + '_others'
         os.makedirs(new_path, exist_ok=False)
         os.makedirs(others_path, exist_ok=False)
 
-        for code, sample_lst in self.dataset.items():
-            code_path = os.path.join(self.sample_root, code)
-            sample_code_path = os.path.join(new_path, code)
-            sample_others_code_path = os.path.join(others_path, code)
-            os.makedirs(sample_code_path, exist_ok=True)
-            os.makedirs(sample_others_code_path, exist_ok=True)
+        for category, sample_lst in self.dataset.items():
+            category_path = os.path.join(self.sample_root, category)
+            sample_category_path = os.path.join(new_path, category)
+            sample_others_category_path = os.path.join(others_path, category)
+            os.makedirs(sample_category_path, exist_ok=True)
+            os.makedirs(sample_others_category_path, exist_ok=True)
 
-            if code in sample_dict:
-                num_of_samples = sample_dict[code]
+            if category in sample_dict:
+                num_of_samples = sample_dict[category]
 
             random.shuffle(sample_lst)
             sample_others_lst = None
@@ -97,57 +97,57 @@ class PlayDataset(object):
             print("---Start sampling dataset---")
             pbar = tqdm(sample_lst)
             for file_name in pbar:
-                image_path = os.path.join(code_path, file_name + self.img_format)
-                xml_path = os.path.join(code_path, file_name + '.xml')
-                new_image = os.path.join(sample_code_path, file_name + self.img_format)
-                new_xml = os.path.join(sample_code_path, file_name + '.xml')
+                image_path = os.path.join(category_path, file_name + self.img_format)
+                xml_path = os.path.join(category_path, file_name + '.xml')
+                new_image = os.path.join(sample_category_path, file_name + self.img_format)
+                new_xml = os.path.join(sample_category_path, file_name + '.xml')
                 shutil.copyfile(image_path, new_image)
                 shutil.copyfile(xml_path, new_xml)
 
-                pbar.set_description('Processing code:{}'.format(code))
+                pbar.set_description('Processing category:{}'.format(category))
 
             if not sample_others_lst: continue
 
             print("---Start saving othre data---")
             pbar = tqdm(sample_others_lst)
             for file_name in pbar:
-                image_path = os.path.join(code_path, file_name + self.img_format)
-                xml_path = os.path.join(code_path, file_name + '.xml')
-                new_image = os.path.join(sample_others_code_path, file_name + self.img_format)
-                new_xml = os.path.join(sample_others_code_path, file_name + '.xml')
+                image_path = os.path.join(category_path, file_name + self.img_format)
+                xml_path = os.path.join(category_path, file_name + '.xml')
+                new_image = os.path.join(sample_others_category_path, file_name + self.img_format)
+                new_xml = os.path.join(sample_others_category_path, file_name + '.xml')
                 shutil.copyfile(image_path, new_image)
                 shutil.copyfile(xml_path, new_xml)
 
-                pbar.set_description('Processing code:{}'.format(code))
+                pbar.set_description('Processing category:{}'.format(category))
 
-    def merge_code_old(self, merge_dict):
+    def merge_category_old(self, merge_dict):
         """
-        :info: 对指定的code进行合并，生成新的dataset
-        :param merge_dict: 合并code字典，key值是合并后的名称，value是需要合并的code的list
+        :info: 对指定的category进行合并，生成新的dataset
+        :param merge_dict: 合并category字典，key值是合并后的名称，value是需要合并的category的list
         """
         Dataset = {}
-        for merge_code, code_lst in merge_dict.items():
-            Dataset[merge_code] = []
-            for code in code_lst:
-                if code in self.dataset:
-                    Dataset[merge_code] += self.dataset[code]
+        for merge_category, category_lst in merge_dict.items():
+            Dataset[merge_category] = []
+            for category in category_lst:
+                if category in self.dataset:
+                    Dataset[merge_category] += self.dataset[category]
                 else:
-                    print('Skip merging code {}, it does not exist.'.format(code))
+                    print('Skip merging category {}, it does not exist.'.format(category))
         self.dataset = Dataset
 
-    def merge_code(self, **merge_dict):
+    def merge_category(self, **merge_dict):
         """
-        :info: 对指定的code进行合并，生成新的dataset
-        :param merge_dict: 合并code字典，key值是合并后的名称，value是需要合并的code的list
+        :info: 对指定的category进行合并，生成新的dataset
+        :param merge_dict: 合并category字典，key值是合并后的名称，value是需要合并的category的list
         """
-        for merge_code, code_lst in merge_dict.items():
-            if merge_code not in self.dataset:
-                self.dataset[merge_code] = []
-            for code in code_lst:
-                if code in self.dataset and code != merge_code:
-                    self.dataset[merge_code] += self.dataset.pop(code)
+        for merge_category, category_lst in merge_dict.items():
+            if merge_category not in self.dataset:
+                self.dataset[merge_category] = []
+            for category in category_lst:
+                if category in self.dataset and category != merge_category:
+                    self.dataset[merge_category] += self.dataset.pop(category)
                 else:
-                    print('Skip merging code {}.'.format(code))
+                    print('Skip merging category {}.'.format(category))
 
     def plot_dist_of_dataset(self, control_line):
         """
@@ -156,9 +156,9 @@ class PlayDataset(object):
         """
         labels = []
         count = []
-        for code in sorted(self.dataset.keys()):
-            labels.append(code)
-            count.append(len(self.dataset[code]))
+        for category in sorted(self.dataset.keys()):
+            labels.append(category)
+            count.append(len(self.dataset[category]))
 
         x = np.arange(len(labels))
 
@@ -166,7 +166,7 @@ class PlayDataset(object):
         fig.set_facecolor('papayawhip')
         # 等价于 fig = plt.figure() 和 ax = fig.add_subplot(1,1,1)
         rects = ax.bar(x, count, width=0.5, color='SkyBlue',
-                       label='CodeNum')
+                       label='categoryNum')
         line_x = (-1, len(labels))
         line_y = (control_line, control_line)
         if control_line > 0:
@@ -176,7 +176,7 @@ class PlayDataset(object):
                         ha='left', va='bottom')
 
         ax.set_ylabel('Count')
-        ax.set_title('<{}> Image Count for Each Code'.format(self.name))
+        ax.set_title('<{}> Image Count for Each category'.format(self.name))
         ax.set_xticks(x)
         ax.set_xticklabels(labels, rotation=45, rotation_mode='anchor',
                            ha='right', size='x-small')
@@ -193,7 +193,7 @@ class PlayDataset(object):
         fig.tight_layout()
         output_dir = '.\\output'
         os.makedirs(output_dir, exist_ok=True)
-        save_path = os.path.join(output_dir, self.name + '_CodeCount.png')
+        save_path = os.path.join(output_dir, self.name + '_categoryCount.png')
         plt.savefig(save_path, facecolor='papayawhip', bbox_inches='tight', dpi=300)
         plt.show()
 
@@ -214,7 +214,7 @@ class PlayDataset(object):
             var_lst = var_lst[0]
         return var_lst
 
-    def info_img_and_code(self):
+    def info_img_and_category(self):
         """
         :info: 打印图片以及缺陷的基本特征，大小以及bbox的坐标分布范围
         """
@@ -224,12 +224,12 @@ class PlayDataset(object):
         bbox_center_y_dict = {}
 
         area_lst = []
-        for code, name_lst in self.dataset.items():
-            code_path = os.path.join(self.sample_root, code)
-            bbox_center_x_dict[code] = []
-            bbox_center_y_dict[code] = []
+        for category, name_lst in self.dataset.items():
+            category_path = os.path.join(self.sample_root, category)
+            bbox_center_x_dict[category] = []
+            bbox_center_y_dict[category] = []
             for file_name in name_lst:
-                xml_path = os.path.join(code_path, file_name + '.xml')
+                xml_path = os.path.join(category_path, file_name + '.xml')
 
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
@@ -255,8 +255,8 @@ class PlayDataset(object):
                     center_x = (xmin + xmax) // 2
                     center_y = (ymin + ymax) // 2
 
-                    bbox_center_x_dict[code].append(center_x)
-                    bbox_center_y_dict[code].append(center_y)
+                    bbox_center_x_dict[category].append(center_x)
+                    bbox_center_y_dict[category].append(center_y)
 
                     bbox_xmin = min(xmin, bbox_xmin)
                     bbox_ymin = min(ymin, bbox_ymin)
@@ -271,9 +271,9 @@ class PlayDataset(object):
         ax.xaxis.tick_top()  # 将x坐标轴移到上方
         ax.set_title('<{}> Distribution of BundingBox Center'.format(self.name))
         plt.grid(alpha=0.75, linestyle='--')
-        for code in sorted(bbox_center_x_dict.keys()):
-            ax.scatter(bbox_center_x_dict[code], bbox_center_y_dict[code],
-                       marker='.', label=code)
+        for category in sorted(bbox_center_x_dict.keys()):
+            ax.scatter(bbox_center_x_dict[category], bbox_center_y_dict[category],
+                       marker='.', label=category)
         plt.legend(bbox_to_anchor=(1.05, 0), loc=3, borderaxespad=0)
 
         output_dir = '.\\output'
@@ -317,16 +317,16 @@ class PlayDataset(object):
         :info: 删除没有bbox信息的XML文件
         """
         cnt = 0
-        for code, name_lst in self.dataset.items():
-            code_path = os.path.join(self.sample_root, code)
+        for category, name_lst in self.dataset.items():
+            category_path = os.path.join(self.sample_root, category)
             for file_name in name_lst:
-                xml_path = os.path.join(code_path, file_name + '.xml')
+                xml_path = os.path.join(category_path, file_name + '.xml')
 
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
                 if len(root.findall('object')) == 0:
                     os.remove(xml_path)
-                    self.dataset[code].remove(file_name)
+                    self.dataset[category].remove(file_name)
                     cnt += 1
                     print('[DELETE] file {:>3d}:{}'.format(cnt, xml_path))
         if cnt == 0:
@@ -339,16 +339,16 @@ class PlayDataset(object):
         """
         new_path = self.sample_root + '_lack_info'
         os.makedirs(new_path, exist_ok=True)
-        for code in os.listdir(self.sample_root):
-            code_path = os.path.join(self.sample_root, code)
-            new_code_path = os.path.join(new_path, code)
-            os.makedirs(new_code_path, exist_ok=True)
-            for file in os.listdir(code_path):
+        for category in os.listdir(self.sample_root):
+            category_path = os.path.join(self.sample_root, category)
+            new_category_path = os.path.join(new_path, category)
+            os.makedirs(new_category_path, exist_ok=True)
+            for file in os.listdir(category_path):
                 file_name = os.path.splitext(file)[0]
-                if file_name not in self.dataset[code]:
+                if file_name not in self.dataset[category]:
                     print('[MOVE] file {} to new directory.'.format(file))
-                    file_path = os.path.join(code_path, file)
-                    new_file_path = os.path.join(new_code_path, file)
+                    file_path = os.path.join(category_path, file)
+                    new_file_path = os.path.join(new_category_path, file)
                     shutil.move(file_path, new_file_path)
         print('[FINISH] Move file without complete information.')
 
@@ -359,38 +359,38 @@ class PlayDataset(object):
         new_path = self.sample_root + '_multiDefect'
         os.makedirs(new_path, exist_ok=True)
         print("---Start moving multi-defects images---")
-        for code, name_lst in self.dataset.items():
-            code_path = os.path.join(self.sample_root, code)
+        for category, name_lst in self.dataset.items():
+            category_path = os.path.join(self.sample_root, category)
             pbar = tqdm(name_lst)
             for file_name in pbar:
-                xml_path = os.path.join(code_path, file_name + '.xml')
-                img_path = os.path.join(code_path, file_name + self.img_format)
+                xml_path = os.path.join(category_path, file_name + '.xml')
+                img_path = os.path.join(category_path, file_name + self.img_format)
 
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
                 for obj in root.findall('object'):
                     name = self.get_and_check(obj, 'name', 1).text
-                    if name != code:
-                        new_code_path = os.path.join(new_path, code)
-                        os.makedirs(new_code_path, exist_ok=True)
-                        new_xml_path = os.path.join(new_code_path, file_name + '.xml')
-                        new_img_path = os.path.join(new_code_path, file_name + self.img_format)
+                    if name != category:
+                        new_category_path = os.path.join(new_path, category)
+                        os.makedirs(new_category_path, exist_ok=True)
+                        new_xml_path = os.path.join(new_category_path, file_name + '.xml')
+                        new_img_path = os.path.join(new_category_path, file_name + self.img_format)
                         shutil.move(xml_path, new_xml_path)
                         shutil.move(img_path, new_img_path)
-                        self.dataset[code].remove(file_name)
+                        self.dataset[category].remove(file_name)
                         break
-                    pbar.set_description('Processing code:{}'.format(code))
+                    pbar.set_description('Processing category:{}'.format(category))
         sleep(1)
         print('---End moving multi-defects files---')
 
-    def correct_wrong_tag(self, code, correct_code):
+    def correct_wrong_tag(self, category, correct_category):
         """
         :info: 将打标拼写错误的标签纠正
         """
-        assert code in self.dataset, 'CODE:{} does not exist.'.format(code)
-        code_path = os.path.join(self.sample_root, code)
-        for file_name in self.dataset[code]:
-            xml_path = os.path.join(code_path, file_name + '.xml')
+        assert category in self.dataset, 'category:{} does not exist.'.format(category)
+        category_path = os.path.join(self.sample_root, category)
+        for file_name in self.dataset[category]:
+            xml_path = os.path.join(category_path, file_name + '.xml')
             tree = ET.parse(xml_path)
             root = tree.getroot()
             size = self.get_and_check(root, 'size', 1)
@@ -398,11 +398,11 @@ class PlayDataset(object):
             height = self.get_and_check(size, 'height', 1).text
             for obj in root.findall('object'):
                 name = self.get_and_check(obj, 'name', 1).text
-                if name == code:
-                    self.get_and_check(obj, 'name', 1).text = correct_code
-            print('[Correct] Correct code name of {}.xml file.'.format(file_name))
+                if name == category:
+                    self.get_and_check(obj, 'name', 1).text = correct_category
+            print('[Correct] Correct category name of {}.xml file.'.format(file_name))
             tree.write(xml_path)
-        print('[FINISH] Correct code of XML file.')
+        print('[FINISH] Correct category of XML file.')
 
     def correct_dataset(self):
         """
@@ -411,12 +411,13 @@ class PlayDataset(object):
         new_path = self.sample_root + '_correct'
         os.makedirs(new_path, exist_ok=True)
         print("---Start correcting dataset---")
-        for code, name_lst in self.dataset.items():
-            code_path = os.path.join(self.sample_root, code)
+        sleep(1)
+        for category, name_lst in self.dataset.items():
+            category_path = os.path.join(self.sample_root, category)
             pbar = tqdm(name_lst)
             for file_name in pbar:
-                xml_path = os.path.join(code_path, file_name + '.xml')
-                img_path = os.path.join(code_path, file_name + self.img_format)
+                xml_path = os.path.join(category_path, file_name + '.xml')
+                img_path = os.path.join(category_path, file_name + self.img_format)
 
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
@@ -425,7 +426,8 @@ class PlayDataset(object):
                 difficult = 0
                 for obj in root.findall('object'):
                     diff = int(self.get_and_check(obj, 'difficult', 1).text)
-                    if diff == 1: difficult = 1
+                    if diff == 1:
+                        difficult = 1
                     bbox = self.get_and_check(obj, 'bndbox', 1)
                     xmin = int(self.get_and_check(bbox, 'xmin', 1).text)
                     ymin = int(self.get_and_check(bbox, 'ymin', 1).text)
@@ -434,28 +436,28 @@ class PlayDataset(object):
                     bbox_area = (xmax - xmin + 1) * (ymax - ymin + 1)
                     if bbox_area > area:
                         area = bbox_area
-                        category = self.get_and_check(obj, 'name', 1).text
+                        new_category = self.get_and_check(obj, 'name', 1).text
 
-                new_code_path = os.path.join(new_path, category)
+                new_category_path = os.path.join(new_path, new_category)
                 if difficult == 1:
-                    new_code_path = os.path.join(new_path, 'difficult', category)
-                os.makedirs(new_code_path, exist_ok=True)
-                new_xml_path = os.path.join(new_code_path, file_name + '.xml')
-                new_img_path = os.path.join(new_code_path, file_name + self.img_format)
+                    new_category_path = os.path.join(new_path, 'difficult', new_category)
+                os.makedirs(new_category_path, exist_ok=True)
+                new_xml_path = os.path.join(new_category_path, file_name + '.xml')
+                new_img_path = os.path.join(new_category_path, file_name + self.img_format)
                 shutil.copy(xml_path, new_xml_path)
                 shutil.copy(img_path, new_img_path)
-                pbar.set_description('Processing raw code:{}'.format(code))
+                pbar.set_description('Processing raw category:{}'.format(category))
         sleep(1)
         print('---End copying file with correct tag---')
 
-    def modify_xml(self, code):
+    def modify_xml(self, category):
         """
-        :info: 对于一些特殊的code，修改bbox信息至全图范围
+        :info: 对于一些特殊的category，修改bbox信息至全图范围
         """
-        assert code in self.dataset, 'CODE:{} does not exist.'.format(code)
-        code_path = os.path.join(self.sample_root, code)
-        for file_name in self.dataset[code]:
-            xml_path = os.path.join(code_path, file_name + '.xml')
+        assert category in self.dataset, 'category:{} does not exist.'.format(category)
+        category_path = os.path.join(self.sample_root, category)
+        for file_name in self.dataset[category]:
+            xml_path = os.path.join(category_path, file_name + '.xml')
             tree = ET.parse(xml_path)
             root = tree.getroot()
             size = self.get_and_check(root, 'size', 1)
@@ -471,6 +473,31 @@ class PlayDataset(object):
             print('[MODIFY] Modify bunding box of {}.xml file.'.format(file_name))
             tree.write(xml_path)
         print('[FINISH] Modify bunding box of XML file.')
+        
+    def reset_difficult(self):
+        """
+        :info: 重置标签xml中difficult信息
+        """
+        print("---Start resetting difficult dataset---")
+        total_resetting = 0
+        for category, name_lst in self.dataset.items():
+            category_path = os.path.join(self.sample_root, category)
+            cnt = 0
+            for file_name in name_lst:
+                xml_path = os.path.join(category_path, file_name + '.xml')
+                tree = ET.parse(xml_path)
+                root = tree.getroot()
+
+                for obj in root.findall('object'):
+                    diff = int(self.get_and_check(obj, 'difficult', 1).text)
+                    if diff == 1:
+                        self.get_and_check(obj, 'difficult', 1).text = '0'
+                        cnt += 1
+                        tree.write(xml_path)
+            print('The number of reset category [{}]: {}'.format(category, cnt))
+            total_resetting += cnt
+        print('[FINISH] Total number of reset data: {}'.format(total_resetting))
+
 
 
 if __name__ == '__main__':
