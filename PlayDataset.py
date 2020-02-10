@@ -20,6 +20,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from openpyxl import Workbook
 
+
 def convert_img_format(sample_root, img_format=None, tar_format='.jpg'):
     if img_format is None:
         img_format = ['.jpg', '.JPG']
@@ -34,17 +35,19 @@ def convert_img_format(sample_root, img_format=None, tar_format='.jpg'):
 
 
 class PlayDataset(object):
-    def __init__(self, sample_root, img_format='.jpg'):
+    def __init__(self, sample_root, img_format='.jpg', img_only=False):
         """
         :param sample_root: 数据集根目录
         :param img_format: 数据图片格式，默认.jpg
+        :param img_only: 数据只包含图片 默认False
         """
         self.sample_root = sample_root.rstrip("\\")
         self.name = self.sample_root.split('\\')[-1]
         self.img_format = img_format
-        self.dataset = self.file_to_dict()
+        self.img_only = img_only
+        self.dataset = self.__file_to_dict()
 
-    def file_to_dict(self):
+    def __file_to_dict(self):
         Dataset = {}
         cnt = 0
         for root, _, file_lst in os.walk(self.sample_root):
@@ -56,13 +59,17 @@ class PlayDataset(object):
                     image_path = os.path.join(root, file_name + self.img_format)
                     xml_path = os.path.join(root, file_name + '.xml')
                     if file_name not in Dataset[category] and \
-                            os.path.isfile(xml_path) and os.path.isfile(image_path):
+                            (os.path.isfile(xml_path) or self.img_only)\
+                            and os.path.isfile(image_path):
                         Dataset[category].append(file_name)
                         cnt += 1
         print('The quantity of all valid images is {}'.format(cnt))
         return Dataset
 
     def count_category(self):
+        """
+        :info: 统计每类数量，如果是多级文件则统计所有子类数量，并且输出xlsx表格文件
+        """
         output_dir = '.\\output'
         table_path = os.path.join(output_dir, self.name+'_category_quantity.xlsx')
         wb = Workbook()
@@ -76,7 +83,6 @@ class PlayDataset(object):
         wb.save(table_path)
         wb.close()
         print("[FINISH] The result has been saved at path: {}".format(table_path))
-
 
     def sample_data(self,
                     num_of_samples,
@@ -114,42 +120,30 @@ class PlayDataset(object):
             pbar = tqdm(sample_lst)
             for file_name in pbar:
                 image_path = os.path.join(category_path, file_name + self.img_format)
-                xml_path = os.path.join(category_path, file_name + '.xml')
                 new_image = os.path.join(sample_category_path, file_name + self.img_format)
-                new_xml = os.path.join(sample_category_path, file_name + '.xml')
                 shutil.copyfile(image_path, new_image)
-                shutil.copyfile(xml_path, new_xml)
+                if not self.img_only:
+                    xml_path = os.path.join(category_path, file_name + '.xml')
+                    new_xml = os.path.join(sample_category_path, file_name + '.xml')
+                    shutil.copyfile(xml_path, new_xml)
 
                 pbar.set_description('Processing category:{}'.format(category))
 
-            if not sample_others_lst: continue
+            if not sample_others_lst:
+                continue
 
-            print("---Start saving othre data---")
+            print("---Start saving other data---")
             pbar = tqdm(sample_others_lst)
             for file_name in pbar:
                 image_path = os.path.join(category_path, file_name + self.img_format)
-                xml_path = os.path.join(category_path, file_name + '.xml')
                 new_image = os.path.join(sample_others_category_path, file_name + self.img_format)
-                new_xml = os.path.join(sample_others_category_path, file_name + '.xml')
                 shutil.copyfile(image_path, new_image)
-                shutil.copyfile(xml_path, new_xml)
+                if not self.img_only:
+                    xml_path = os.path.join(category_path, file_name + '.xml')
+                    new_xml = os.path.join(sample_others_category_path, file_name + '.xml')
+                    shutil.copyfile(xml_path, new_xml)
 
                 pbar.set_description('Processing category:{}'.format(category))
-
-    def merge_category_old(self, merge_dict):
-        """
-        :info: 对指定的category进行合并，生成新的dataset
-        :param merge_dict: 合并category字典，key值是合并后的名称，value是需要合并的category的list
-        """
-        Dataset = {}
-        for merge_category, category_lst in merge_dict.items():
-            Dataset[merge_category] = []
-            for category in category_lst:
-                if category in self.dataset:
-                    Dataset[merge_category] += self.dataset[category]
-                else:
-                    print('Skip merging category {}, it does not exist.'.format(category))
-        self.dataset = Dataset
 
     def merge_category(self, **merge_dict):
         """
@@ -232,8 +226,9 @@ class PlayDataset(object):
 
     def info_img_and_category(self):
         """
-        :info: 打印图片以及缺陷的基本特征，大小以及bbox的坐标分布范围
+        :info: 打印图片以及类别的基本特征，大小以及bbox的坐标分布范围
         """
+        assert self.img_only, "This method needs xml files."
         width_min = height_min = bbox_xmin = bbox_ymin = 100000
         width_max = height_max = bbox_xmax = bbox_ymax = 0
         bbox_center_x_dict = {}
@@ -332,6 +327,7 @@ class PlayDataset(object):
         """
         :info: 删除没有bbox信息的XML文件
         """
+        assert self.img_only, "This method needs xml files."
         cnt = 0
         for category, name_lst in self.dataset.items():
             category_path = os.path.join(self.sample_root, category)
@@ -353,6 +349,7 @@ class PlayDataset(object):
         """
         :info: 移动没有标签的图片或者没有对应图片的标签到新的文件夹下
         """
+        assert self.img_only, "This method needs xml files."
         new_path = self.sample_root + '_lack_info'
         os.makedirs(new_path, exist_ok=True)
         for category in os.listdir(self.sample_root):
@@ -372,6 +369,7 @@ class PlayDataset(object):
         """
         :info: 移动一张图中有多缺陷的图片以及标签到新的文件夹中
         """
+        assert self.img_only, "This method needs xml files."
         new_path = self.sample_root + '_multiDefect'
         os.makedirs(new_path, exist_ok=True)
         print("---Start moving multi-defects images---")
@@ -403,6 +401,7 @@ class PlayDataset(object):
         """
         :info: 将打标拼写错误的标签纠正
         """
+        assert self.img_only, "This method needs xml files."
         assert category in self.dataset, 'category:{} does not exist.'.format(category)
         category_path = os.path.join(self.sample_root, category)
         for file_name in self.dataset[category]:
@@ -424,6 +423,7 @@ class PlayDataset(object):
         """
         :info: 将所有文件按照xml标签中的类别进行分类,如果标记有difficult则放入困难样本
         """
+        assert self.img_only, "This method needs xml files."
         new_path = self.sample_root + '_correct'
         os.makedirs(new_path, exist_ok=True)
         print("---Start correcting dataset---")
@@ -470,6 +470,7 @@ class PlayDataset(object):
         """
         :info: 对于一些特殊的category，修改bbox信息至全图范围
         """
+        assert self.img_only, "This method needs xml files."
         assert category in self.dataset, 'category:{} does not exist.'.format(category)
         category_path = os.path.join(self.sample_root, category)
         for file_name in self.dataset[category]:
@@ -494,6 +495,7 @@ class PlayDataset(object):
         """
         :info: 重置标签xml中difficult信息
         """
+        assert self.img_only, "This method needs xml files."
         print("---Start resetting difficult dataset---")
         total_resetting = 0
         for category, name_lst in self.dataset.items():
