@@ -251,7 +251,7 @@ class PlayDataset(object):
         """
         :info: 打印图片以及类别的基本特征，大小以及bbox的坐标分布范围
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         width_min = height_min = bbox_xmin = bbox_ymin = 100000
         width_max = height_max = bbox_xmax = bbox_ymax = 0
         bbox_center_x_dict = {}
@@ -350,7 +350,7 @@ class PlayDataset(object):
         """
         :info: 删除没有bbox信息的XML文件
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         cnt = 0
         for category, name_lst in self.dataset.items():
             category_path = os.path.join(self.sample_root, category)
@@ -372,7 +372,7 @@ class PlayDataset(object):
         """
         :info: 移动没有标签的图片或者没有对应图片的标签到新的文件夹下
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         new_path = self.sample_root + '_lack_info'
         os.makedirs(new_path, exist_ok=True)
         for category in os.listdir(self.sample_root):
@@ -392,7 +392,7 @@ class PlayDataset(object):
         """
         :info: 移动一张图中有多缺陷的图片以及标签到新的文件夹中
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         new_path = self.sample_root + '_multiDefect'
         os.makedirs(new_path, exist_ok=True)
         print("---Start moving multi-defects images---")
@@ -424,7 +424,7 @@ class PlayDataset(object):
         """
         :info: 将打标拼写错误的标签纠正
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         assert category in self.dataset, 'category:{} does not exist.'.format(category)
         category_path = os.path.join(self.sample_root, category)
         for file_name in self.dataset[category]:
@@ -446,7 +446,7 @@ class PlayDataset(object):
         """
         :info: 将所有文件按照xml标签中的类别进行分类,如果标记有difficult则放入困难样本
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         new_path = self.sample_root + '_correct'
         os.makedirs(new_path, exist_ok=True)
         print("---Start correcting dataset---")
@@ -493,7 +493,7 @@ class PlayDataset(object):
         """
         :info: 对于一些特殊的category，修改bbox信息至全图范围
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         assert category in self.dataset, 'category:{} does not exist.'.format(category)
         category_path = os.path.join(self.sample_root, category)
         for file_name in self.dataset[category]:
@@ -518,7 +518,7 @@ class PlayDataset(object):
         """
         :info: 重置标签xml中difficult信息
         """
-        assert self.img_only, "This method needs xml files."
+        assert not self.img_only, "This method needs xml files."
         print("---Start resetting difficult dataset---")
         total_resetting = 0
         for category, name_lst in self.dataset.items():
