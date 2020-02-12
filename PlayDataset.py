@@ -144,6 +144,8 @@ class PlayDataset(object):
                     shutil.copyfile(xml_path, new_xml)
 
                 pbar.set_description('Processing category:{}'.format(category))
+        sleep(0.5)
+        print('[FINISH] Data sampling has been finished.')
 
     def merge_category(self, **merge_dict):
         """
