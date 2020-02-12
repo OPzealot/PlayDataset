@@ -84,6 +84,24 @@ class PlayDataset(object):
         wb.close()
         print("[FINISH] The result has been saved at path: {}".format(table_path))
 
+    def gather_data(self):
+        """
+        :info: 将所有子文件的数据放到同一个目录下
+        """
+        new_path = os.path.join(self.sample_root+'_gather', 'all')
+        os.makedirs(new_path, exist_ok=False)
+        for category, file_lst in self.dataset.items():
+            category_path = os.path.join(self.sample_root, category)
+            for file_name in file_lst:
+                image_path = os.path.join(category_path, file_name + self.img_format)
+                new_image = os.path.join(new_path, file_name + self.img_format)
+                shutil.copyfile(image_path, new_image)
+                if not self.img_only:
+                    xml_path = os.path.join(category_path, file_name + '.xml')
+                    new_xml = os.path.join(new_path, file_name + '.xml')
+                    shutil.copyfile(xml_path, new_xml)
+        print('[FINISH] Gathering the data is done.')
+
     def sample_data(self,
                     num_of_samples,
                     dir_name='sample',
