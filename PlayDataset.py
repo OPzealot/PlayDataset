@@ -90,7 +90,8 @@ class PlayDataset(object):
         """
         new_path = os.path.join(self.sample_root+'_gather', 'all')
         os.makedirs(new_path, exist_ok=False)
-        for category, file_lst in self.dataset.items():
+        pbar = tqdm(self.dataset.items())
+        for category, file_lst in pbar:
             category_path = os.path.join(self.sample_root, category)
             for file_name in file_lst:
                 image_path = os.path.join(category_path, file_name + self.img_format)
@@ -100,6 +101,8 @@ class PlayDataset(object):
                     xml_path = os.path.join(category_path, file_name + '.xml')
                     new_xml = os.path.join(new_path, file_name + '.xml')
                     shutil.copyfile(xml_path, new_xml)
+            pbar.set_description('Processing category:{}'.format(category))
+        sleep(0.5)
         print('[FINISH] Gathering the data is done.')
 
     def sample_data(self,
