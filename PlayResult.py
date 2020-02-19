@@ -63,6 +63,7 @@ class PlayResult(object):
         self.filter_correct()
         new_path = self.sample_root + '_incorrect'
         print('---Start merging incorrect data---')
+        sleep(0.5)
         pbar = tqdm(self.dataset.items())
         for category, file_list in pbar:
             predict_cat = category.split('\\')[-1]
@@ -74,6 +75,6 @@ class PlayResult(object):
                 new_img_path = os.path.join(new_category_path, file_name + self.img_format)
                 shutil.copy(img_path, new_img_path)
             pbar.set_description('Processing category:{}'.format(category))
-        sleep(1)
+        sleep(0.5)
         print('---End merging incorrect data---')
 
