@@ -48,23 +48,23 @@ class PlayDataset(object):
         self.dataset = self.__file_to_dict()
 
     def __file_to_dict(self):
-        Dataset = {}
+        dataset = {}
         cnt = 0
         for root, _, file_lst in os.walk(self.sample_root):
             if len(file_lst) > 0:
                 category = root.split(self.sample_root + '\\')[-1]
-                Dataset[category] = []
+                dataset[category] = []
                 for file in file_lst:
                     file_name = os.path.splitext(file)[0]
                     image_path = os.path.join(root, file_name + self.img_format)
                     xml_path = os.path.join(root, file_name + '.xml')
-                    if file_name not in Dataset[category] and \
+                    if file_name not in dataset[category] and \
                             (os.path.isfile(xml_path) or self.img_only)\
                             and os.path.isfile(image_path):
-                        Dataset[category].append(file_name)
+                        dataset[category].append(file_name)
                         cnt += 1
         print('The quantity of all valid images is {}'.format(cnt))
-        return Dataset
+        return dataset
 
     def count_category(self):
         """
