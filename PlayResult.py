@@ -91,6 +91,7 @@ class PlayResult(object):
                 new_category_path = os.path.join(correct_path, predict_cat)
             else:
                 new_category_path = os.path.join(incorrect_path, ori_cat, predict_cat)
+            os.makedirs(new_category_path, exist_ok=True)
             for file_name in file_list:
                 img_path = os.path.join(self.sample_root, category, file_name + self.img_format)
                 new_img_path = os.path.join(new_category_path, file_name + self.img_format)
