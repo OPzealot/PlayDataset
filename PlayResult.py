@@ -78,3 +78,23 @@ class PlayResult(object):
         sleep(0.5)
         print('---End merging incorrect data---')
 
+    def reconstruct_result(self):
+        correct_path = self.sample_root + '_correct'
+        incorrect_path = self.sample_root + '_incorrect'
+        print('---Start reconstructing results---')
+        sleep(0.5)
+        pbar = tqdm(self.dataset.items())
+        for category, file_list in pbar:
+            predict_cat = category.split('\\')[-1]
+            ori_cat = category.split('\\')[-2]
+            if predict_cat == ori_cat:
+                new_category_path = os.path.join(correct_path, predict_cat)
+            else:
+                new_category_path = os.path.join(incorrect_path, ori_cat, predict_cat)
+            for file_name in file_list:
+                img_path = os.path.join(self.sample_root, category, file_name + self.img_format)
+                new_img_path = os.path.join(new_category_path, file_name + self.img_format)
+                shutil.copy(img_path, new_img_path)
+            pbar.set_description('Processing category:{}'.format(category))
+        sleep(0.5)
+        print('---End reconstructing results---')
