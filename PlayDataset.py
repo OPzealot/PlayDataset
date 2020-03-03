@@ -19,7 +19,7 @@ from matplotlib.lines import Line2D
 import numpy as np
 import xml.etree.ElementTree as ET
 from openpyxl import Workbook
-
+import time
 
 def convert_img_format(sample_root, img_format=None, tar_format='.jpg'):
     if img_format is None:
@@ -46,6 +46,7 @@ class PlayDataset(object):
         self.img_format = img_format
         self.img_only = img_only
         self.dataset = self.__file_to_dict()
+        self.time = time.strftime('(%Y-%m-%d)', time.localtime())
 
     def __file_to_dict(self):
         dataset = {}
@@ -346,7 +347,7 @@ class PlayDataset(object):
         print('BundingBox的取值范围：bbox_xmin={}, bbox_ymin={}, bbox_xmax={}, bbox_ymax={}'
               .format(bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax))
 
-    def delete_no_BBox_XML(self):
+    def delete_no_bbox_xml(self):
         """
         :info: 删除没有bbox信息的XML文件
         """
@@ -396,7 +397,7 @@ class PlayDataset(object):
         """
         cnt = 0
         target_path = target_path[:-1] if target_path.endswith('\\') else target_path
-        new_path = target_path + '_difficult'
+        new_path = target_path + '_difficult' + self.time
         print("---Start moving difficult data---")
         sleep(1)
         pbar = tqdm(self.dataset.items())
@@ -428,10 +429,10 @@ class PlayDataset(object):
         new_path = self.sample_root + '_multiDefect'
         os.makedirs(new_path, exist_ok=True)
         print("---Start moving multi-defects images---")
-        for category, name_lst in self.dataset.items():
+        pbar = tqdm(self.dataset.items())
+        for category, name_lst in pbar:
             category_path = os.path.join(self.sample_root, category)
-            pbar = tqdm(name_lst)
-            for file_name in pbar:
+            for file_name in name_lst:
                 xml_path = os.path.join(category_path, file_name + '.xml')
                 img_path = os.path.join(category_path, file_name + self.img_format)
 
@@ -448,7 +449,7 @@ class PlayDataset(object):
                         shutil.move(img_path, new_img_path)
                         self.dataset[category].remove(file_name)
                         break
-                    pbar.set_description('Processing category:{}'.format(category))
+                pbar.set_description('Processing category:{}'.format(category))
         sleep(1)
         print('---End moving multi-defects files---')
 
