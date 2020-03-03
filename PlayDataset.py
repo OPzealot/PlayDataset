@@ -388,6 +388,38 @@ class PlayDataset(object):
                     shutil.move(file_path, new_file_path)
         print('[FINISH] Move file without complete information.')
 
+    def move_difficult_data(self, target_path):
+        """
+        :info: sample_root 目录结构：/原category/现category/复判图片.jpg; 将target_path中的对应信息存放至新的文件夹下
+        :param target_path: 目标文件夹，原数据目录
+        :return:
+        """
+        cnt = 0
+        target_path = target_path[:-1] if target_path.endswith('\\') else target_path
+        new_path = target_path + '_difficult'
+        print("---Start moving difficult data---")
+        sleep(1)
+        pbar = tqdm(self.dataset.items())
+        for category, name_lst in pbar:
+            ori_cate = category.split('\\')[0]
+            new_cate = category.split('\\')[1]
+            category_path = os.path.join(target_path, ori_cate)
+            new_category_path = os.path.join(new_path, new_cate)
+            os.makedirs(new_category_path, exist_ok=True)
+            for file_name in name_lst:
+                xml_path = os.path.join(category_path, file_name + '.xml')
+                img_path = os.path.join(category_path, file_name + self.img_format)
+                if os.path.isfile(xml_path) and os.path.isfile(img_path):
+                    cnt += 1
+                    new_xml_path = os.path.join(new_category_path, file_name + '.xml')
+                    new_img_path = os.path.join(new_category_path, file_name + self.img_format)
+                    shutil.move(xml_path, new_xml_path)
+                    shutil.move(img_path, new_img_path)
+            pbar.set_description('Processing category:{}'.format(category))
+        sleep(1)
+        print("[FINISH] Moving {} pairs of data.".format(cnt))
+        print("---End moving difficult data---")
+
     def move_multi_defect_data(self):
         """
         :info: 移动一张图中有多缺陷的图片以及标签到新的文件夹中
@@ -420,7 +452,7 @@ class PlayDataset(object):
         sleep(1)
         print('---End moving multi-defects files---')
 
-    def correct_wrong_tag(self, category, correct_category):
+    def correct_typo(self, category, correct_category):
         """
         :info: 将打标拼写错误的标签纠正
         """
@@ -431,9 +463,6 @@ class PlayDataset(object):
             xml_path = os.path.join(category_path, file_name + '.xml')
             tree = ET.parse(xml_path)
             root = tree.getroot()
-            size = self.get_and_check(root, 'size', 1)
-            width = self.get_and_check(size, 'width', 1).text
-            height = self.get_and_check(size, 'height', 1).text
             for obj in root.findall('object'):
                 name = self.get_and_check(obj, 'name', 1).text
                 if name == category:
@@ -441,6 +470,28 @@ class PlayDataset(object):
             print('[Correct] Correct category name of {}.xml file.'.format(file_name))
             tree.write(xml_path)
         print('[FINISH] Correct category of XML file.')
+
+    def correct_category(self):
+        """
+        :info: 按照文件目录更改标签
+        :return:
+        """
+        assert not self.img_only, "This method needs xml files."
+        print("---Start correcting category---")
+        sleep(1)
+        pbar = tqdm(self.dataset.items())
+        for category, name_lst in pbar:
+            category_path = os.path.join(self.sample_root, category)
+            for file_name in name_lst:
+                xml_path = os.path.join(category_path, file_name + '.xml')
+                tree = ET.parse(xml_path)
+                root = tree.getroot()
+                for obj in root.findall('object'):
+                    self.get_and_check(obj, 'name', 1).text = category
+                tree.write(xml_path)
+            pbar.set_description('Processing category:{}'.format(category))
+        sleep(1)
+        print("---End correcting category---")
 
     def correct_dataset(self):
         """
@@ -451,10 +502,10 @@ class PlayDataset(object):
         os.makedirs(new_path, exist_ok=True)
         print("---Start correcting dataset---")
         sleep(1)
-        for category, name_lst in self.dataset.items():
+        pbar = tqdm(self.dataset.items())
+        for category, name_lst in pbar:
             category_path = os.path.join(self.sample_root, category)
-            pbar = tqdm(name_lst)
-            for file_name in pbar:
+            for file_name in name_lst:
                 xml_path = os.path.join(category_path, file_name + '.xml')
                 img_path = os.path.join(category_path, file_name + self.img_format)
 
@@ -485,7 +536,7 @@ class PlayDataset(object):
                 new_img_path = os.path.join(new_category_path, file_name + self.img_format)
                 shutil.copy(xml_path, new_xml_path)
                 shutil.copy(img_path, new_img_path)
-                pbar.set_description('Processing raw category:{}'.format(category))
+            pbar.set_description('Processing raw category:{}'.format(category))
         sleep(1)
         print('---End copying file with correct tag---')
 
