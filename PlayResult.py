@@ -99,3 +99,8 @@ class PlayResult(object):
             pbar.set_description('Processing category:{}'.format(category))
         sleep(0.5)
         print('---End reconstructing results---')
+
+if __name__ == '__main__':
+    sample_root = r'D:\Working\Tianma\1x1A4\work_dir\20200305_k_fold_v4'
+    playData = PlayResult(sample_root)
+    playData.reconstruct_result()

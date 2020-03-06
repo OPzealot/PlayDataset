@@ -73,7 +73,7 @@ class DifficultDataset(object):
             os.makedirs(new_code_path, exist_ok=True)
             for file_name in file_name_lst:
                 xml_path = os.path.join(target_path, file_name + '.xml')
-                img_path= os.path.join(target_path, file_name + self.img_format)
+                img_path = os.path.join(target_path, file_name + self.img_format)
                 new_xml_path = os.path.join(new_code_path, file_name + '.xml')
                 new_img_path = os.path.join(new_code_path, file_name + self.img_format)
                 if os.path.isfile(img_path) and os.path.isfile(xml_path):
