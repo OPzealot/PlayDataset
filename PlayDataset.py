@@ -353,7 +353,10 @@ class PlayDataset(object):
         """
         assert not self.img_only, "This method needs xml files."
         cnt = 0
-        for category, name_lst in self.dataset.items():
+        sleep(0.5)
+        print("---Start deleting no bbox xml---")
+        pbar = tqdm(self.dataset.items())
+        for category, name_lst in pbar:
             category_path = os.path.join(self.sample_root, category)
             for file_name in name_lst:
                 xml_path = os.path.join(category_path, file_name + '.xml')
@@ -364,9 +367,11 @@ class PlayDataset(object):
                     os.remove(xml_path)
                     self.dataset[category].remove(file_name)
                     cnt += 1
-                    print('[DELETE] file {:>3d}:{}'.format(cnt, xml_path))
+            pbar.set_description('Processing category:{}'.format(category))
+        sleep(0.5)
         if cnt == 0:
             print('Nothing has been deleted.')
+        print("---End deleting no bbox xml---")
         print('[FINISH] Delete XML file without bunding box.')
 
     def move_file_lack_info(self):
@@ -375,18 +380,21 @@ class PlayDataset(object):
         """
         assert not self.img_only, "This method needs xml files."
         new_path = self.sample_root + '_lack_info'
-        os.makedirs(new_path, exist_ok=True)
-        for category in os.listdir(self.sample_root):
+        sleep(0.5)
+        print("---Start moving file lack of information---")
+        pbar = tqdm(os.listdir(self.sample_root))
+        for category in pbar:
             category_path = os.path.join(self.sample_root, category)
             new_category_path = os.path.join(new_path, category)
-            os.makedirs(new_category_path, exist_ok=True)
             for file in os.listdir(category_path):
                 file_name = os.path.splitext(file)[0]
                 if file_name not in self.dataset[category]:
-                    print('[MOVE] file {} to new directory.'.format(file))
+                    os.makedirs(new_category_path, exist_ok=True)
                     file_path = os.path.join(category_path, file)
                     new_file_path = os.path.join(new_category_path, file)
                     shutil.move(file_path, new_file_path)
+            pbar.set_description('Processing category:{}'.format(category))
+        print("---End moving file lack of information---")
         print('[FINISH] Move file without complete information.')
 
     def move_difficult_data(self, target_path):
