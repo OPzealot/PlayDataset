@@ -21,6 +21,7 @@ import xml.etree.ElementTree as ET
 from openpyxl import Workbook
 import time
 
+
 def convert_img_format(sample_root, img_format=None, tar_format='.jpg'):
     if img_format is None:
         img_format = ['.jpg', '.JPG']
