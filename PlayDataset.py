@@ -211,7 +211,7 @@ class PlayDataset(object):
                         ha='left', va='bottom')
 
         ax.set_ylabel('Count')
-        ax.set_title('<{}> Image Count for Each category'.format(self.name))
+        ax.set_title('<{}> Image Count for Each Category'.format(self.name))
         ax.set_xticks(x)
         ax.set_xticklabels(labels, rotation=45, rotation_mode='anchor',
                            ha='right', size='x-small')
