@@ -127,7 +127,6 @@ class PlayDataset(object):
             sample_category_path = os.path.join(new_path, category)
             sample_others_category_path = os.path.join(others_path, category)
             os.makedirs(sample_category_path, exist_ok=True)
-            os.makedirs(sample_others_category_path, exist_ok=True)
 
             if category in sample_dict:
                 num_of_samples = sample_dict[category]
@@ -154,7 +153,7 @@ class PlayDataset(object):
 
             if not sample_others_lst:
                 continue
-
+            os.makedirs(sample_others_category_path, exist_ok=True)
             print("---Start saving other data---")
             pbar = tqdm(sample_others_lst)
             for file_name in pbar:
