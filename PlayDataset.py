@@ -601,6 +601,6 @@ class PlayDataset(object):
 
 
 if __name__ == '__main__':
-    sample_root = r'D:\Working\阿里天池项目\数据重庆\Data\CQCampain'
+    sample_root = r'D:\Working\Tianma\18902\data\18902_0415'
     playData = PlayDataset(sample_root)
     playData.correct_dataset()
