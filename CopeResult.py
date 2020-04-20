@@ -5,7 +5,7 @@ author: liusili
 @l@icense: (C) Copyright 2019, Union Big Data Co. Ltd. All rights reserved.
 @contact: liusili@unionbigdata.com
 @software:
-@file: PlayResult.py
+@file: CopeResult.py
 @time: 2020/2/19
 @desc: 
 """
@@ -15,7 +15,7 @@ from tqdm import tqdm
 from time import sleep
 
 
-class PlayResult(object):
+class CopeResult(object):
     def __init__(self, sample_root, img_format='.jpg'):
         """
         :param sample_root: 结果目录
@@ -100,7 +100,8 @@ class PlayResult(object):
         sleep(0.5)
         print('---End reconstructing results---')
 
+
 if __name__ == '__main__':
     sample_root = r'D:\Working\Tianma\1x1A4\work_dir\20200305_k_fold_v4'
-    playData = PlayResult(sample_root)
+    playData = CopeResult(sample_root)
     playData.reconstruct_result()
